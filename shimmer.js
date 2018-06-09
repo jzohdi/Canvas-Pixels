@@ -183,6 +183,10 @@ function animate(){
   for (var n = 0; n < drops.length; n++){
     drops[n].dist += rippleSpeed;
     drops[n].maxDist -= rippleSpeed;
+    if (drops[n].maxDist < 0){
+      var out = drops.indexOf(drops[n]);
+      drops.splice(out, 1);
+    }
   }
 }
 
