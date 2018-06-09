@@ -13,8 +13,8 @@ function getDeci(x) {
 }
 
 var rippleSpeed = 2;
-var maxDist = 0;
-var ripple = false;
+// var maxDist = 0;
+// var ripple = false;
 // function rippleUp(maxDist){
 //   var maxDist = maxDist;
 //   while (maxDist >= 1){
@@ -46,19 +46,24 @@ var ripple = false;
 //     maxDist -= rippleSpeed;
 //   }
 // }
-var radius = {
-  dist: undefined
-}
-var mouse = {
-  x: undefined,
-  y: undefined
+// var radius = {
+//   dist: undefined
+// }
+var drops = []
+
+function Drip(x, y, dist) {
+  this.x = x;
+  this.y = y;
+  this.dist = 0;
+  this.maxDist = dist;
+
 }
 
-function furthestWallCorner(){
-  var wallUpRight = {distance: Math.round(Math.sqrt(Math.round(Math.abs(0 - mouse.y))**2 + Math.round(Math.abs(innerWidth - mouse.x))**2)), direction: 'Up'};
-  var wallDownRight = {distance: Math.round(Math.sqrt(Math.round(Math.abs(innerHeight - mouse.y))**2 + Math.round(Math.abs(innerWidth - mouse.x))**2)), direction: 'Down'};
-  var wallUpLeft = {distance: Math.round(Math.sqrt(Math.round(Math.abs(0 - mouse.y))**2 + Math.round(Math.abs(0 - mouse.x))**2)), direction: 'Right'};
-  var wallDownLeft = {distance: Math.round(Math.sqrt(Math.round(Math.abs(innerHeight - mouse.y))**2 + Math.round(Math.abs(0 - mouse.x))**2)), direction: 'Left'};
+function furthestWallCorner(x, y){
+  var wallUpRight = {distance: Math.round(Math.sqrt(Math.round(Math.abs(0 - y))**2 + Math.round(Math.abs(innerWidth - x))**2)), direction: 'Up'};
+  var wallDownRight = {distance: Math.round(Math.sqrt(Math.round(Math.abs(innerHeight - y))**2 + Math.round(Math.abs(innerWidth - x))**2)), direction: 'Down'};
+  var wallUpLeft = {distance: Math.round(Math.sqrt(Math.round(Math.abs(0 - y))**2 + Math.round(Math.abs(0 - x))**2)), direction: 'Right'};
+  var wallDownLeft = {distance: Math.round(Math.sqrt(Math.round(Math.abs(innerHeight - y))**2 + Math.round(Math.abs(0 - y))**2)), direction: 'Left'};
   if (Math.max( wallUpRight.distance, wallDownRight.distance, wallUpLeft.distance, wallDownLeft.distance) == wallUpRight.distance){
     return wallUpRight;
   }
@@ -74,12 +79,13 @@ function furthestWallCorner(){
 }
 
 window.addEventListener('click', function(){
-  mouse.x = event.clientX;
-  mouse.y = event.clientY;
-  var diDict = furthestWallCorner();
-  radius.dist = 0;
-  maxDist = diDict.distance;
-  ripple = true;
+  // mouse.x = event.clientX;
+  // mouse.y = event.clientY;
+  var diDict = furthestWallCorner(event.clientX, event.clientY);
+  var maxDist = diDict.distance;
+  drops.push(new Drip(event.clientX, event.clientY, maxDist))
+  // maxDist = diDict.distance;
+  // ripple = true;
   // if (diDict.direction == 'Up'){
   //   radius.dist = 0;
   //   return rippleUp(diDict.distance);
@@ -98,7 +104,7 @@ window.addEventListener('click', function(){
   // }
 })
 
-console.log(innerWidth);
+// console.log(innerWidth);
 var pixelNumber = 150;
 var widthForEach = innerWidth / pixelNumber;
 var pixelsTall = innerHeight / widthForEach;
@@ -112,6 +118,7 @@ function Pixel(xIndex, yIndex, x, y, width){
   this.x = x;
   this.y = y;
   this.width = width;
+  this.dripHit = false;
   this.rate = 5;
 
   this.draw = function(){
@@ -120,7 +127,15 @@ function Pixel(xIndex, yIndex, x, y, width){
   }
   this.update = function(){
 
-    if ((mouse.y - this.y)**2 + (mouse.x - this.x)**2 >= (radius.dist - 15)**2 && (mouse.y - this.y)**2 + (mouse.x - this.x)**2 <= (radius.dist + 15)**2){
+    this.dripHit = false;
+
+    for (var t = 0; t < drops.length; t++){
+      if ((drops[t].y - this.y)**2 + (drops[t].x - this.x)**2 >= (drops[t].dist - 15)**2 && (drops[t].y - this.y)**2 + (drops[t].x - this.x)**2 <= (drops[t].dist + 15)**2){
+        this.dripHit = true;
+      }
+    }
+
+    if (this.dripHit){
       this.r = 0;
       this.g = 0;
       this.b = 0;
@@ -165,14 +180,10 @@ function animate(){
       pixels[i][n].update();
     }
   }
-  if (ripple){
-    radius.dist += rippleSpeed;
-    maxDist -= 1;
+  for (var n = 0; n < drops.length; n++){
+    drops[n].dist += rippleSpeed;
+    drops[n].maxDist -= rippleSpeed;
   }
-  if (maxDist <= 1){
-    ripple = false;
-  }
-
 }
 
 animate();
